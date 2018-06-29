@@ -121,17 +121,35 @@ def getContent(aQuestionURL):
     else:
         return(None,None,None)
 #save_dir = os.getcwd()
-save_dir = '/home/itolab/notebooks/yoshino/Data/Q&A/yahoo'
-for i,qURL in enumerate(question_url):
-    #print(qURL)
-    qText,aText,qID = getContent(qURL)
-    if(qText!=None and aText!=None):
-        #print(save_dir+'/Question/'+'Q'+qID+'.txt')
-        pathQ = save_dir+"/Question/"+"Q"+qID+".txt"
-        fQ = open(pathQ,'w')
-        fQ.write(qText)
-        fQ.close()
-        pathA = save_dir+"/Answer/"+"A"+qID+".txt"
-        fA = open(pathA,'w')
-        fA.write(aText)
-        fA.close()
+save_dir = '/home/itolab/virtualenvs/sharedData/Q&A/yahoo'
+#save_dir = '/home/itolab/notebooks/yoshino/Data/Q&A/yahoo'
+def saveContentS(aQuestion_URL_list):
+    for i,qURL in enumerate(aQuestion_URL_list):
+        print(qURL)
+        qText,aTextList,qID = getContent(qURL)
+        if(qText!=None and aTextList!=None):
+            #print(save_dir+'/Question/'+'Q'+qID+'.txt')
+            pathQ = save_dir+"/Question/"+"Q"+qID+".txt"
+            fQ = open(pathQ,'w')
+            fQ.write(qText)
+            fQ.close()
+            pathA = save_dir+"/Answer/"+"A"+qID+".txt"
+            fA = open(pathA,'w')
+            fA.writelines(aTextList)
+            fA.close()
+    return
+saveContentS(question_url)
+#
+import datetime
+def scraping():
+    #starttime = time.ctime()
+    starttime = datetime.datetime.now() # 現在の日時を取得
+    while((datetime.datetime.now()-starttime).seconds<600):
+        # アクセスするURL
+        url = "https://okwave.jp/"
+        question_url = getQustionURL(url)
+        save_dir = '/home/itolab/virtualenvs/sharedData/Q&A/okwave'
+        saveContentS(question_url)
+        time.sleep(60)
+    return
+scraping()

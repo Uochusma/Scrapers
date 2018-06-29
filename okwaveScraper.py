@@ -9,6 +9,7 @@ import urllib3
 import urllib.request
 import requests
 import time
+import bs4
 from bs4 import BeautifulSoup
 #===================================================================================================
 starttime = time.ctime()
@@ -24,7 +25,7 @@ def getQustionURL(aTopURL):
     for q_list in all_q_list:
         q_list_content = q_list.find_all('li')
         for i,ref in enumerate(q_list_content):
-            print(ref)
+            #print(ref)
             q_url = url + ref.find('a').attrs['href']
             q_url_list.append(q_url)
     return(q_url_list)
@@ -40,6 +41,8 @@ print("phase ",phase," start", "=" * 60, time.ctime())
 def getContent(aQuestionURL):
     q_html = urllib.request.urlopen(aQuestionURL)
     q_soup = BeautifulSoup(q_html)
+    qID = aQuestionURL.replace("https://okwave.jp//qa/","")
+    qID = qID.replace(".html","")
 #     print(q_soup.body)
     # Questionを取得
     questionList = q_soup.find('div', attrs={'class': 'q_desc'})
@@ -47,70 +50,59 @@ def getContent(aQuestionURL):
 #     print(questionList)
     total_q_text = ''
     for i,q in enumerate(questionList):
-#         print(i)
-#         print(q)
-#         text = q.text
-#         text = text.replace(r'\s','')
-#         text = text.replace(r'\n','')
-#         text = text.replace(r'違反報告','')
         text = q
-#         print(text)
-#         print(type(text))
-#         print(isinstance(text,))
-#         print('len=',len(text))
         if(len(text)!=0):
             total_q_text+=text
-#         print(total_text)
     print("----------Question----------")
     print(total_q_text)
     # Answerを取得
     answerList = q_soup.find_all('div', attrs={'class': 'a_textarea'})
-#     print(answerList)
     total_a_text_list = []
     for i,answer in enumerate(answerList):
-#         print(i)
-#         print(answer
         total_a_text = ''
         for j,a in enumerate(answer):
             text = a
-            if(len(text)!=0):
+            if(len(text)!=0 and type(text)!=bs4.element.Tag):
                 total_a_text+=text
 #         print(total_a_text)
         total_a_text_list.append(total_a_text)
-    
-#     for i,a in enumerate(answerList):
-#         print(i)
-#         print(a)
-#         text = a
-#         if(len(text)!=0):
-#             total_a_text+=text
     print("----------Answer----------")
     print(total_a_text_list)
     #スリープ
     time.sleep(1)
+    if(len(total_q_text)>0 and len(total_a_text_list)>0):
+        return(total_q_text,total_a_text_list,qID)
+    else:
+        return(None,None,None)
+#save_dir = os.getcwd()
+save_dir = '/home/itolab/virtualenvs/sharedData/Q&A/okwave'
+def saveContentS(aQuestion_URL_list):
+    for i,qURL in enumerate(aQuestion_URL_list):
+        print(qURL)
+        qText,aTextList,qID = getContent(qURL)
+        if(qText!=None and aTextList!=None):
+            #print(save_dir+'/Question/'+'Q'+qID+'.txt')
+            pathQ = save_dir+"/Question/"+"Q"+qID+".txt"
+            fQ = open(pathQ,'w')
+            fQ.write(qText)
+            fQ.close()
+            pathA = save_dir+"/Answer/"+"A"+qID+".txt"
+            fA = open(pathA,'w')
+            fA.writelines(aTextList)
+            fA.close()
     return
-save_dir = os.getcwd()
-for i,qURL in enumerate(question_url):
-    print(qURL)
-#     qURL = 'https://okwave.jp/qa/q9505931.html'
-    getContent(qURL)
-    """
-    if(ref.attrs['href'].find('.log')==-1):
-        continue
-    #print(ref)
-    #print("%s's url is %s" % (ref.text, ref.attrs['href']))
-    file_name = ref.attrs['href']
-    print(i,'/',total,':',file_name)
-    download_url = url+file_name
-    #print(download_url)
-    r = requests.get(download_url)
-    #print('content=',r.content)
-    #print('content2=',r.content.decode('utf-8'))
-    text = r.content.decode('utf-8')
-    # ファイルの保存
-    if r.status_code == 200:
-        #f = open(save_dir+'/'+file_name+'.txt', 'w','utf-8')
-        f = codecs.open(save_dir+'/train2/'+file_name+'.txt', 'w', 'utf-8')
-        f.write(text)
-        f.close()
-    #"""
+saveContentS(question_url)
+#
+import datetime
+def scraping():
+    #starttime = time.ctime()
+    starttime = datetime.datetime.now() # 現在の日時を取得
+    while((datetime.datetime.now()-starttime).seconds<600):
+        # アクセスするURL
+        url = "https://okwave.jp/"
+        question_url = getQustionURL(url)
+        save_dir = '/home/itolab/virtualenvs/sharedData/Q&A/okwave'
+        saveContentS(question_url)
+        time.sleep(60)
+    return
+scraping()
