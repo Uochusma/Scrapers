@@ -10,6 +10,7 @@ import urllib.request
 import requests
 import time
 from bs4 import BeautifulSoup
+
 #===================================================================================================
 starttime = time.ctime()
 phase = 1
@@ -37,24 +38,65 @@ def getQustionURL(aTopURL):
 # アクセスするURL
 url = "https://oshiete.goo.ne.jp/articles/qa/"
 question_url = getQustionURL(url)
-#print(question_url)
+print(question_url)
 print("phase ",phase," done", "=" * 60, time.ctime())
+
 phase+=1
 #===================================================================================================
 print("phase ",phase," start", "=" * 60, time.ctime())
+
 def getContent(aQuestionURL):
-    q_html = urllib.request.urlopen(aQuestionURL)
+    q_html = urllib.request.urlopen('https:'+aQuestionURL)
     q_soup = BeautifulSoup(q_html)
-    print(q_soup.body)
-    questionDiv = q_soup.find('div',attrs={'class': 'ptsQes'})
-    questionList = questionDiv.find_all('p')
-    for i,q in enumerate(questionList):
-        print(i)
-        #print(q)
-        print(q.text)
+    print("q_soup.body")
+#     print(q_soup.body)
+#     questionDiv = q_soup.find('div',attrs={'class': 'ptsQes'})
+#     questionList = questionDiv.find_all('p')
+
+    question_list = q_soup.body.find('p', attrs={'class': 'q_text'})
+#     print(question_list)
+    question_text = ''
+    for i,q in enumerate(question_list):
+#         print('='*60)
+#         print(i)
+#         print(q)
+        q_text = str(q)
+#         print(q_text)
+#         if q_text == '<br/>':
+#             q_text = ''
+        q_text = re.sub(r'<br/>', '', q_text)
+#         q_text = q_text.replace('\n', '')
+#         q_text = re.sub(r'\n', '', q_text)
+        q_text = re.sub(r'\s', '', q_text)
+#         q_text = re.sub(r'\S', '', q_text)
+#         print(q_text)
+        if len(q_text) != 0:
+            question_text += q_text
+#         print(question_text)
+    print('*****Question*****')
+    print(question_text)
     #スリープ
     time.sleep(1)
+
+    answer_list = q_soup.body.find_all('div', attrs={'class': 'a_text'})
+#     print(answer_list)
+    for i, a in enumerate(answer_list):
+#         print('='*60)
+#         print(i)
+#         print(a)
+        a_text = str(a)
+#         for j, a_line in enumerate(a_text)
+        a_text = re.sub(r'<div.*>', '', a_text)
+        a_text = re.sub(r'</div>', '', a_text)
+        a_text = re.sub(r'<h2>', '', a_text)
+        a_text = re.sub(r'</h2>', '', a_text)
+        a_text = re.sub(r'<br/>', '', a_text)
+        a_text = re.sub(r'\s', '', a_text)
+        print('*****Answer*****')
+        print(a_text)
+
     return
+
 save_dir = os.getcwd()
 for i,qURL in enumerate(question_url):
     print(qURL)
@@ -79,3 +121,4 @@ for i,qURL in enumerate(question_url):
         f.write(text)
         f.close()
     #"""
+
